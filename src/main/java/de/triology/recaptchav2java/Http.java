@@ -32,7 +32,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.function.Function;
 
 /**
  * HTTP-related logic for reCAPTCHA.
@@ -41,22 +40,18 @@ class Http {
     private static final Logger LOG = LoggerFactory.getLogger(Http.class);
     private Http() {}
 
-    static String post(String url, String urlParameters) {
-        return withConnectionTo(url, connection -> {
-
-            sendPostRequest(connection, urlParameters);
-
-            return receiveResponse(connection);
-        });
-    }
-
-    private static String withConnectionTo(String url, Function<HttpURLConnection, String> runnable) {
+    // make explicit exception declaration on ReCaptchaException even when it is a RuntimeException.
+    static String post(String url, String urlParameters) throws ReCaptchaException {
+        // instead of a functional 'withConnectionTo' methd call, use plain old rigid java code.
         HttpURLConnection con = null;
         try {
             LOG.trace("Opening connection to {}", url);
             con = openConnection(url);
-            return runnable.apply(con);
-        } finally {
+            sendPostRequest(con, urlParameters);
+            return receiveResponse(con);
+
+        }
+        finally {
             if (con != null) {
                 LOG.trace("Closing connection to {}", url);
                 con.disconnect();
